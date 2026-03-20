@@ -95,7 +95,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
+    const timeoutId = setTimeout(async () => {
       if (!tokenizer || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
@@ -113,12 +113,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setQueryTokens(serverTokens || []);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [inputValue, tokenizer]);
 
