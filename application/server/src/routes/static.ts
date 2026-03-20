@@ -32,7 +32,10 @@ staticRouter.use(
   }),
 );
 
-// 3. CLIENT_DIST_PATH (Compiled JS/CSS)
+// 3. SPA 対応のため、ファイルが存在しないときに index.html を返すようにリライト
+staticRouter.use(history());
+
+// 4. CLIENT_DIST_PATH (Compiled JS/CSS)
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     index: false,
@@ -46,6 +49,3 @@ staticRouter.use(
     },
   }),
 );
-
-// 4. SPA 対応のため、最後に index.html を返す
-staticRouter.use(history());

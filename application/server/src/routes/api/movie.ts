@@ -15,7 +15,7 @@ if (ffmpegStatic) {
 }
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
@@ -38,7 +38,15 @@ movieRouter.post("/movies", async (req, res) => {
     await new Promise<void>((resolve, reject) => {
       ffmpeg(tempInputPath)
         .output(outputPath)
-        .size("320x?") // Resize for better GIF performance
+        .size("320x?") // Resize for better performance
+        .videoCodec("libx264")
+        .outputOptions([
+          "-pix_fmt yuv420p", // Compatibility
+          "-movflags +faststart", // Enable early playback
+          "-crf 28", // Balance quality and size
+          "-preset faster",
+          "-tune fastdecode",
+        ])
         .on("end", () => resolve())
         .on("error", (err) => reject(err))
         .run();

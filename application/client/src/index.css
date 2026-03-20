@@ -27,10 +27,11 @@
   --color-cax-danger-soft: var(--color-red-100);
   --color-cax-highlight: var(--color-amber-200);
   --color-cax-highlight-ink: var(--color-amber-950);
+  --font-sans: system-ui, -apple-system, sans-serif;
 }
 
 @utility markdown {
-  @apply text-sm wrap-anywhere;
+  @apply text-sm wrap-anywhere whitespace-pre-wrap;
   line-break: strict;
 
   /* インライン要素 */
@@ -162,22 +163,6 @@
   & > *:last-child {
     @apply mb-0;
   }
-}
-
-@font-face {
-  /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
-  font-family: "Rei no Are Mincho";
-  font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
-  font-weight: normal;
-}
-
-@font-face {
-  /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
-  font-family: "Rei no Are Mincho";
-  font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
-  font-weight: bold;
 }
 
 .font-awesome {

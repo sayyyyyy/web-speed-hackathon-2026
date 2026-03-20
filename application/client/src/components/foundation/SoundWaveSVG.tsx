@@ -5,27 +5,43 @@ interface ParsedData {
   peaks: number[];
 }
 
+let sharedAudioCtx: AudioContext | null = null;
+function getAudioContext() {
+  if (!sharedAudioCtx) {
+    sharedAudioCtx = new AudioContext();
+  }
+  return sharedAudioCtx;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const audioCtx = getAudioContext();
 
-  // 音声をデコードする
+  // 音声をデコードする (元のデータを壊さないように slice する)
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = Array.from(buffer.getChannelData(0)).map(Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = Array.from(buffer.getChannelData(1)).map(Math.abs);
+  
+  const leftChannel = buffer.getChannelData(0);
+  const rightChannel = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftChannel;
+  const length = buffer.length;
 
-  // 左右の音声データの平均を取る
-  const normalized = leftData.map((v, i) => (v + rightData[i]) / 2);
-  // 100 個の chunk に分ける
-  const chunkSize = Math.ceil(normalized.length / 100);
-  const peaks = Array.from({ length: 100 }, (_, i) => {
-    const chunk = normalized.slice(i * chunkSize, (i + 1) * chunkSize);
-    if (chunk.length === 0) return 0;
-    return chunk.reduce((a, b) => a + b, 0) / chunk.length;
-  });
-  // chunk の平均の中から最大値を取る
-  const max = peaks.reduce((a, b) => Math.max(a, b), 0);
+  const numPeaks = 100;
+  const chunkSize = Math.floor(length / numPeaks);
+  const peaks = new Array(numPeaks).fill(0);
+  let max = 0;
+
+  for (let i = 0; i < numPeaks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, length);
+    let sum = 0;
+    for (let j = start; j < end; j++) {
+      const left = leftChannel[j] ?? 0;
+      const right = rightChannel[j] ?? 0;
+      // 左右チャンネルの平均の絶対値を加算
+      sum += (Math.abs(left) + Math.abs(right)) / 2;
+    }
+    const avg = sum / (end - start || 1);
+    peaks[i] = avg;
+    if (avg > max) max = avg;
+  }
 
   return { max, peaks };
 }
@@ -34,26 +50,35 @@ interface Props {
   soundData: ArrayBuffer;
 }
 
+/**
+ * 音声の波形を表示するコンポーネント
+ */
 export const SoundWaveSVG = ({ soundData }: Props) => {
-  const uniqueIdRef = useRef(Math.random().toString(16));
+  const uniqueId = useRef(Math.random().toString(16)).current;
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    let isCancelled = false;
+    calculate(soundData).then((result) => {
+      if (!isCancelled) {
+        setPeaks(result);
+      }
     });
+    return () => {
+      isCancelled = true;
+    };
   }, [soundData]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
-        const ratio = peak / max;
+        const ratio = max > 0 ? peak / max : 0;
         return (
           <rect
-            key={`${uniqueIdRef.current}#${idx}`}
+            key={`${uniqueId}#${idx}`}
             fill="var(--color-cax-accent)"
             height={ratio}
             width="1"

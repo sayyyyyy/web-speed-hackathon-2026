@@ -74,17 +74,49 @@ searchRouter.get("/search", async (req, res) => {
       ...textWhere,
       ...dateWhere,
     },
+    attributes: { exclude: ["updatedAt"] },
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["password", "updatedAt"] },
+        include: [
+          {
+            association: "profileImage",
+            attributes: { exclude: ["updatedAt"] },
+          },
+        ],
+      },
+      {
+        association: "images",
+        attributes: { exclude: ["updatedAt"] },
+        through: { attributes: [] },
+      },
+      {
+        association: "movie",
+        attributes: { exclude: ["updatedAt"] },
+      },
+      {
+        association: "sound",
+        attributes: { exclude: ["updatedAt"] },
+      },
+    ],
   });
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
+      attributes: { exclude: ["updatedAt"] },
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
+          attributes: { exclude: ["password", "updatedAt", "profileImageId"] },
+          include: [
+            {
+              association: "profileImage",
+              attributes: { exclude: ["updatedAt"] },
+            },
+          ],
           required: true,
           where: {
             [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
@@ -92,10 +124,17 @@ searchRouter.get("/search", async (req, res) => {
         },
         {
           association: "images",
+          attributes: { exclude: ["updatedAt"] },
           through: { attributes: [] },
         },
-        { association: "movie" },
-        { association: "sound" },
+        {
+          association: "movie",
+          attributes: { exclude: ["updatedAt"] },
+        },
+        {
+          association: "sound",
+          attributes: { exclude: ["updatedAt"] },
+        },
       ],
       limit,
       offset,
