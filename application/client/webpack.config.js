@@ -86,7 +86,9 @@ const config = {
     new HtmlWebpackPlugin({
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-    new HTMLInlineCSSWebpackPlugin(),
+    new HTMLInlineCSSWebpackPlugin({
+      leaveCSSFile: true,
+    }),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],

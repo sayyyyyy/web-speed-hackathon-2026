@@ -43,6 +43,11 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   if (!response.ok) {
     const error: any = new Error(`HTTP error! status: ${response.status}`);
     error.status = response.status;
+    try {
+      error.body = await response.json();
+    } catch {
+      // ignore if body is not JSON
+    }
     throw error;
   }
   return response.json() as Promise<T>;

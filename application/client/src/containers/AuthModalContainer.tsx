@@ -17,6 +17,11 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  // Read error code from server's JSON response body
+  const code = (err as any)?.body?.code as string | undefined;
+  if (code && code in ERROR_MESSAGES) {
+    return ERROR_MESSAGES[code]!;
+  }
   if (type === "signup") {
     return "登録に失敗しました";
   } else {

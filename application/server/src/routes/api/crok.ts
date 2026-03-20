@@ -50,9 +50,7 @@ crokRouter.get("/crok/suggestions", async (req, res) => {
   }
 });
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+
 
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -66,16 +64,16 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+  // TTFT (Time to First Token) を意図的に遅延させていたコードを削除
 
-  for (const char of response) {
+  // 高速化のため、文字単位ではなくある程度まとめて送信（チャンク化）し、意図的なsleepを抑制
+  const chunkSize = 100;
+  for (let i = 0; i < response.length; i += chunkSize) {
     if (res.closed) break;
-
-    const data = JSON.stringify({ text: char, done: false });
+    
+    const chunk = response.slice(i, i + chunkSize);
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
-
-    await sleep(10);
   }
 
   if (!res.closed) {

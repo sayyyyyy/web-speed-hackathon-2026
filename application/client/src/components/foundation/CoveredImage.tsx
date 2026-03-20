@@ -28,7 +28,7 @@ export const CoveredImage = ({ image, isPriority }: Props) => {
     <div className="relative h-full w-full overflow-hidden bg-cax-surface-subtle">
       <img
         alt={alt}
-        className="h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
         src={src}
         width={imageWidth}
         height={imageHeight}

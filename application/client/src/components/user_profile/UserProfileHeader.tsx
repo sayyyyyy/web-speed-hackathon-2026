@@ -37,7 +37,7 @@ export const UserProfileHeader = ({ user }: Props) => {
   }, [user.profileImage.id]);
 
   return (
-    <div className="relative">
+    <header className="relative">
       <div
         className="bg-cax-brand h-32 w-full transition-colors duration-500 sm:h-48"
         style={{ backgroundColor: bgColor }}
@@ -66,6 +66,6 @@ export const UserProfileHeader = ({ user }: Props) => {
           <span>Joined {formatDate(user.createdAt)}</span>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
