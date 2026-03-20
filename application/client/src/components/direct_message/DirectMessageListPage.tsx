@@ -1,10 +1,10 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatDate } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -97,10 +97,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                         </div>
                         {lastMessage != null && (
                           <time
-                            className="text-cax-text-subtle text-xs"
-                            dateTime={lastMessage.createdAt}
+                            className="text-cax-text-muted text-xs"
+                            dateTime={new Date(lastMessage.createdAt).toISOString()}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatDate(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

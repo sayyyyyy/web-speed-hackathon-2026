@@ -87,26 +87,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // Tokenizer is no longer needed on the client as it's handled on the server.
   useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const [Bluebird, kuromoji] = await Promise.all([
-        import("bluebird").then(m => m.default),
-        import("kuromoji").then(m => m.default),
-      ]);
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
+    setTokenizer({} as any); // Mock or remove usage if possible
   }, []);
 
   useEffect(() => {
@@ -120,23 +103,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
+      const { suggestions: results, queryTokens: serverTokens } = await fetchJSON<{ suggestions: string[]; queryTokens: string[] }>(
+        `/api/v1/crok/suggestions?q=${encodeURIComponent(inputValue)}`,
       );
       if (cancelled) {
         return;
       }
 
-      const { extractTokens, filterSuggestionsBM25 } = await import("@web-speed-hackathon-2026/client/src/utils/bm25_search");
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
+      setQueryTokens(serverTokens || []);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
     };

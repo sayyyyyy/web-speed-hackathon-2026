@@ -1,10 +1,39 @@
 import { Router } from "express";
 import { Op } from "sequelize";
+import analyzeSentiment from "negaposi-analyzer-ja";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { getTokenizer } from "@web-speed-hackathon-2026/server/src/utils/tokenizer";
 
 export const searchRouter = Router();
+
+searchRouter.get("/search/sentiment", async (req, res) => {
+  const query = req.query["q"];
+  if (typeof query !== "string" || query.trim() === "") {
+    return res.json({ label: "neutral" });
+  }
+
+  try {
+    const tokenizer = await getTokenizer();
+    const tokens = tokenizer.tokenize(query);
+    const score = analyzeSentiment(tokens);
+    
+    // Determine label based on score threshold
+    // Typically in negaposi-analyzer-ja, negative is < 0
+    let label = "neutral";
+    if (score < -0.1) {
+      label = "negative";
+    } else if (score > 0.1) {
+      label = "positive";
+    }
+
+    return res.json({ label, score });
+  } catch (error) {
+    console.error("Sentiment analysis error:", error);
+    return res.json({ label: "neutral" });
+  }
+});
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];

@@ -1,12 +1,18 @@
 import { promises as fs } from "fs";
 import path from "path";
+import os from "os";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegStatic from "ffmpeg-static";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic);
+}
 
 // 変換した動画の拡張子
 const EXTENSION = "gif";
@@ -21,16 +27,32 @@ movieRouter.post("/movies", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
   const movieId = uuidv4();
+  const tempInputPath = path.join(os.tmpdir(), `${movieId}_input`);
+  const outputPath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  try {
+    await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
+    await fs.writeFile(tempInputPath, req.body);
 
-  return res.status(200).type("application/json").send({ id: movieId });
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(tempInputPath)
+        .output(outputPath)
+        .size("320x?") // Resize for better GIF performance
+        .on("end", () => resolve())
+        .on("error", (err) => reject(err))
+        .run();
+    });
+
+    return res.status(200).type("application/json").send({ id: movieId });
+  } catch (error) {
+    console.error("Movie processing error:", error);
+    throw new httpErrors.BadRequest("Invalid movie or conversion failed");
+  } finally {
+    try {
+      await fs.unlink(tempInputPath);
+    } catch {
+      // Ignore cleanup error
+    }
+  }
 });

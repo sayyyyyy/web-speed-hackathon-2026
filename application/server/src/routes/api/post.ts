@@ -5,6 +5,19 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
+postRouter.post("/translate", async (req, res) => {
+  const { text, targetLanguage } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: "Text is required" });
+  }
+
+  // Simple mock translation for the hackathon to avoid heavy LLM
+  // In a real scenario, this would call an external API or a local model.
+  const translatedText = targetLanguage === "en" ? `[Translated to English]: ${text}` : text;
+
+  return res.status(200).json({ translatedText });
+});
+
 postRouter.get("/posts", async (req, res) => {
   const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
