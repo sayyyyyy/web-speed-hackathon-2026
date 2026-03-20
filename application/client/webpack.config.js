@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -85,6 +86,7 @@ const config = {
     new HtmlWebpackPlugin({
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new HTMLInlineCSSWebpackPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -100,39 +102,6 @@ const config = {
     minimize: true,
     splitChunks: {
       chunks: "all",
-      maxInitialRequests: 10,
-      cacheGroups: {
-        react: {
-          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/,
-          name: "react",
-          chunks: "all",
-          priority: 40,
-        },
-        katex: {
-          test: /[\\/]node_modules[\\/](katex)[\\/]/,
-          name: "katex",
-          chunks: "all",
-          priority: 30,
-        },
-        markdown: {
-          test: /[\\/]node_modules[\\/](react-markdown|rehype-katex|remark-gfm|remark-math)[\\/]/,
-          name: "markdown",
-          chunks: "all",
-          priority: 30,
-        },
-        syntax: {
-          test: /[\\/]node_modules[\\/](react-syntax-highlighter)[\\/]/,
-          name: "syntax",
-          chunks: "all",
-          priority: 30,
-        },
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendor",
-          chunks: "all",
-          priority: 10,
-        },
-      },
     },
     usedExports: true,
     providedExports: true,

@@ -28,18 +28,13 @@ export const CoveredImage = ({ image, isPriority }: Props) => {
     <div className="relative h-full w-full overflow-hidden bg-cax-surface-subtle">
       <img
         alt={alt}
-        className={`h-full w-full object-cover transition-opacity duration-300 ${!isPriority ? "opacity-0" : ""}`}
+        className="h-full w-full object-cover"
         src={src}
         width={imageWidth}
         height={imageHeight}
         loading={isPriority ? "eager" : "lazy"}
         fetchPriority={isPriority ? "high" : "auto"}
         decoding="async"
-        onLoad={(e) => {
-          if (e.currentTarget.classList.contains("opacity-0")) {
-            e.currentTarget.classList.remove("opacity-0");
-          }
-        }}
       />
       <div className="absolute top-0 right-0 p-2">
         <Modal id={dialogId} onClick={handleDialogClick} title={alt}>

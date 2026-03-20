@@ -43,7 +43,9 @@ imageRouter.post("/images", async (req, res) => {
     }
 
     await imageProcessor
-      .webp({ quality: 75, lossless: false })
+      .clone()
+      .resize({ width: 800, withoutEnlargement: true })
+      .webp({ quality: 80, lossless: false })
       .toFile(filePath);
 
     // Create DB record
