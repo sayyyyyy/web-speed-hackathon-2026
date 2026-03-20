@@ -7,6 +7,7 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 import ffmpeg from "fluent-ffmpeg";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { Movie } from "@web-speed-hackathon-2026/server/src/models";
 
 // 変換した動画の拡張子
 const EXTENSION = "mp4";
@@ -44,6 +45,10 @@ movieRouter.post("/movies", async (req, res) => {
         .on("end", () => resolve())
         .on("error", (err) => reject(err))
         .run();
+    });
+
+    await Movie.create({
+      id: movieId,
     });
 
     return res.status(200).type("application/json").send({ id: movieId });

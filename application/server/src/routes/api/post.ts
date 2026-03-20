@@ -121,22 +121,33 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const post = await Post.create(
-    {
-      ...req.body,
-      userId: req.session.userId,
-    },
-    {
-      include: [
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-    },
-  );
+  const { text, images, movie, sound } = req.body as {
+    text: string;
+    images?: { id: string }[];
+    movie?: { id: string };
+    sound?: { id: string };
+  };
 
-  return res.status(200).type("application/json").send(post);
+  // Create the post base with optional belongsTo associations (movie/sound)
+  const post = await Post.create({
+    text,
+    userId: req.session.userId,
+    movieId: movie?.id,
+    soundId: sound?.id,
+  });
+
+  // Handle many-to-many association for images
+  if (images && Array.isArray(images) && images.length > 0) {
+    // @ts-ignore: setImages is dynamic
+    await (post as any).setImages(images.map((img) => img.id));
+  }
+
+  // Reload the post with the default scope to include all associations for the response
+  const createdPost = await Post.findByPk(post.id);
+
+  if (!createdPost) {
+    throw new httpErrors.InternalServerError("Failed to retrieve created post");
+  }
+
+  return res.status(200).type("application/json").send(createdPost);
 });
