@@ -45,6 +45,14 @@ export const PausableMovie = ({ src }: Props) => {
     video.addEventListener("play", handlePlay);
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
+    // すでに再生中、またはデータが読み込み済みの場合は初期化する
+    if (!video.paused) {
+      handlePlay();
+    }
+    if (video.readyState >= 2) {
+      handleLoadedMetadata();
+    }
+
     return () => {
       cancelAnimationFrame(rafRef.current);
       video.removeEventListener("play", handlePlay);
@@ -52,11 +60,12 @@ export const PausableMovie = ({ src }: Props) => {
     };
   }, [src]);
 
-  const togglePlay = () => {
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
-      video.play();
+      video.play().catch(console.error);
       setIsPaused(false);
     } else {
       video.pause();
@@ -65,19 +74,18 @@ export const PausableMovie = ({ src }: Props) => {
   };
 
   return (
-    <button
-      aria-label="動画プレイヤー"
-      className="group relative block h-full w-full cursor-pointer"
+    <div
+      className="group relative block h-full w-full overflow-hidden"
       onClick={togglePlay}
-      type="button"
+      role="presentation"
     >
-      {/* Hidden video element for MP4 playback */}
+      {/* Hidden but active video element for MP4 playback */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="hidden"
+        className="absolute inset-0 -z-50 opacity-0 pointer-events-none h-full w-full object-cover"
         ref={videoRef}
         src={src}
       />
@@ -91,6 +99,6 @@ export const PausableMovie = ({ src }: Props) => {
           <span className="text-4xl text-white drop-shadow-md">▶</span>
         </div>
       )}
-    </button>
+    </div>
   );
 };
