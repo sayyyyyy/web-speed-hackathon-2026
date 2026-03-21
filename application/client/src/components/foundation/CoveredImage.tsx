@@ -1,13 +1,8 @@
-import { Buffer } from "buffer";
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState, useRef } from "react";
+import { MouseEvent, RefCallback, useCallback, useId, useState, useRef } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -15,10 +10,7 @@ interface Props {
   isPriority?: boolean;
 }
 
-/**
- * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
- */
-export const CoveredImage = ({ image }: Props) => {
+export const CoveredImage = ({ image, isPriority }: Props) => {
   const dialogId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const src = getImagePath(image.id);
@@ -28,60 +20,25 @@ export const CoveredImage = ({ image }: Props) => {
     el?.showModal();
   }, [dialogId]);
 
-  // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const imageSize = useMemo(() => {
-    try {
-      if (data == null) return { height: 0, width: 0 };
-      console.log("CoveredImage: calculating size for", image.id);
-      return sizeOf(Buffer.from(data));
-    } catch (e) {
-      console.error("CoveredImage: image-size error for", image.id, e);
-      return { height: 0, width: 0 };
-    }
-  }, [data, image.id]);
-
-  const alt = useMemo(() => {
-    const fallback = image.alt || "説明はありません";
-    try {
-      if (data == null) return fallback;
-      const exif = load(Buffer.from(data).toString("binary"));
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : fallback;
-    } catch (e) {
-      // EXIF extraction might fail for non-JPEG images, fallback to image.alt
-      return fallback;
-    }
-  }, [data, image.alt]);
-
-  const blobUrl = useMemo(() => {
-    try {
-      if (data == null) return null;
-      return URL.createObjectURL(new Blob([data]));
-    } catch (e) {
-      return null;
-    }
-  }, [data]);
+  const imageSize = { height: image.height || 0, width: image.width || 0 };
+  const alt = image.alt || "説明はありません";
 
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
-    setContainerSize({
-      height: el?.clientHeight ?? 0,
-      width: el?.clientWidth ?? 0,
-    });
+    if (el) {
+      setContainerSize({
+        height: el.clientHeight,
+        width: el.clientWidth,
+      });
+    }
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = (imageSize?.height ?? 0) / (imageSize?.width ?? 1);
+  const containerRatio = containerSize.width ? containerSize.height / containerSize.width : 0;
+  const imageRatio = imageSize.width ? imageSize.height / imageSize.width : 0;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
@@ -94,7 +51,12 @@ export const CoveredImage = ({ image }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        src={src}
+        fetchPriority={isPriority ? "high" : "auto"}
+        loading={isPriority ? "eager" : "lazy"}
+        decoding="async"
+        width={image.width}
+        height={image.height}
       />
 
       <button

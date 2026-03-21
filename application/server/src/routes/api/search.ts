@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { Op } from "sequelize";
+// @ts-expect-error - no types available
 import analyzeSentiment from "negaposi-analyzer-ja";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";

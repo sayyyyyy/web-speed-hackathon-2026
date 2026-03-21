@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface ParsedData {
   max: number;
@@ -15,8 +17,6 @@ function getAudioContext() {
 
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = getAudioContext();
-
-  // 音声をデコードする (元のデータを壊さないように slice する)
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   
   const leftChannel = buffer.getChannelData(0);
@@ -35,7 +35,6 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
     for (let j = start; j < end; j++) {
       const left = leftChannel[j] ?? 0;
       const right = rightChannel[j] ?? 0;
-      // 左右チャンネルの平均の絶対値を加算
       sum += (Math.abs(left) + Math.abs(right)) / 2;
     }
     const avg = sum / (end - start || 1);
@@ -47,34 +46,54 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  sound: Models.Sound;
 }
 
-/**
- * 音声の波形を表示するコンポーネント
- */
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ sound }: Props) => {
   const uniqueId = useRef(Math.random().toString(16)).current;
+  const containerRef = useRef<SVGSVGElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "500px" }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     let isCancelled = false;
-    calculate(soundData).then((result) => {
-      if (!isCancelled) {
-        setPeaks(result);
-      }
-    });
+    
+    fetchBinary(getSoundPath(sound.id)).then((data) => {
+      if (isCancelled) return;
+      return calculate(data).then((result) => {
+        if (!isCancelled) {
+          setPeaks(result);
+        }
+      });
+    }).catch(console.error);
+
     return () => {
       isCancelled = true;
     };
-  }, [soundData]);
+  }, [isVisible, sound.id]);
 
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
-      {peaks.map((peak, idx) => {
+    <svg ref={containerRef} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+      {peaks.length > 0 ? peaks.map((peak, idx) => {
         const ratio = max > 0 ? peak / max : 0;
         return (
           <rect
@@ -86,7 +105,7 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
             y={1 - ratio}
           />
         );
-      })}
+      }) : null}
     </svg>
   );
 };

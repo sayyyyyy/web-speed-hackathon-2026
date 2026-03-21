@@ -58,9 +58,14 @@ export const TimelineItem = ({ post, isPriority }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              src={`${getProfileImagePath(post.user.profileImage.id)}?w=62`}
+              srcSet={`${getProfileImagePath(post.user.profileImage.id)}?w=62 1x, ${getProfileImagePath(post.user.profileImage.id)}?w=124 2x`}
+              sizes="62px"
               loading={isPriority ? "eager" : "lazy"}
+              fetchPriority={isPriority ? "high" : "auto"}
               decoding="async"
+              width={62}
+              height={62}
             />
           </Link>
         </div>

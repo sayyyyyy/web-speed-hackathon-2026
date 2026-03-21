@@ -1,6 +1,9 @@
 import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
+import fs from "fs/promises";
+import path from "path";
+import sharp from "sharp";
 
 import {
   CLIENT_DIST_PATH,
@@ -22,6 +25,28 @@ staticRouter.use(
 );
 
 // 2. PUBLIC_PATH (Static assets like profile images)
+// Intercept for resizing profile images dynamically
+staticRouter.get("/images/profiles/:id.webp", async (req, res, next) => {
+  const w = req.query["w"];
+  if (!w || typeof w !== "string" || isNaN(Number(w))) {
+    return next();
+  }
+  
+  try {
+    const width = parseInt(w as string, 10);
+    const filePath = path.join(PUBLIC_PATH, "images", "profiles", `${req.params.id}.webp`);
+    
+    await fs.access(filePath);
+    res.setHeader("Content-Type", "image/webp");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    
+    const resized = await sharp(filePath).resize({ width, height: width }).webp().toBuffer();
+    return res.end(resized);
+  } catch (err) {
+    next();
+  }
+});
+
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
     setHeaders: (res, path) => {

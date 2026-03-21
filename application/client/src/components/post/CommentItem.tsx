@@ -18,7 +18,13 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              src={`${getProfileImagePath(comment.user.profileImage.id)}?w=48`}
+              srcSet={`${getProfileImagePath(comment.user.profileImage.id)}?w=48 1x, ${getProfileImagePath(comment.user.profileImage.id)}?w=96 2x`}
+              sizes="48px"
+              loading="lazy"
+              decoding="async"
+              width={48}
+              height={48}
             />
           </Link>
         </div>

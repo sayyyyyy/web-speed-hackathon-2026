@@ -48,9 +48,14 @@ export const UserProfileHeader = ({ user }: Props) => {
           ref={imgRef}
           alt=""
           crossOrigin="anonymous"
-          src={getProfileImagePath(user.profileImage.id)}
-          loading="lazy"
+          src={`${getProfileImagePath(user.profileImage.id)}?w=128`}
+          srcSet={`${getProfileImagePath(user.profileImage.id)}?w=128 1x, ${getProfileImagePath(user.profileImage.id)}?w=256 2x`}
+          sizes="128px"
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
+          width={128}
+          height={128}
         />
       </div>
       <div className="px-4 pt-20">

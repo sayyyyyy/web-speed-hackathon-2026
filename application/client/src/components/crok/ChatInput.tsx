@@ -7,7 +7,6 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -74,7 +73,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [tokenizer, setTokenizer] = useState<any>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);

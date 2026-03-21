@@ -1,6 +1,5 @@
 import "@web-speed-hackathon-2026/server/src/utils/express_websocket_support";
 import { execSync } from "child_process";
-// @ts-expect-error - fluent-ffmpeg does not have types
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
 // @ts-expect-error - ffprobe-static does not have types
