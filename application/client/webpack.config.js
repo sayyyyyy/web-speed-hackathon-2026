@@ -66,9 +66,7 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      Buffer: ["buffer", "Buffer"],
-    }),
+    new webpack.ProvidePlugin({}),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
