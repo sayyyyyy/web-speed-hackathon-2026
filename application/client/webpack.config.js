@@ -6,6 +6,8 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
+const CompressionPlugin = require("compression-webpack-plugin");
+const zlib = require("zlib");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -88,6 +90,16 @@ const config = {
     }),
     new HTMLInlineCSSWebpackPlugin({
       leaveCSSFile: true,
+    }),
+    new CompressionPlugin({
+      filename: "[path][base].br",
+      algorithm: "brotliCompress",
+      test: /\.(js|css)$/,
+      compressionOptions: {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+        },
+      },
     }),
   ],
   resolve: {

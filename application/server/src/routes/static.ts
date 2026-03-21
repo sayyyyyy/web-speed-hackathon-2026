@@ -36,6 +36,24 @@ staticRouter.use(
 staticRouter.use(history());
 
 // 4. CLIENT_DIST_PATH (Compiled JS/CSS)
+staticRouter.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return next();
+  }
+  
+  if (req.url.match(/\.(js|css)$/) && req.acceptsEncodings('br')) {
+    const originalUrl = req.url;
+    req.url = req.url + '.br';
+    res.setHeader('Content-Encoding', 'br');
+    
+    if (originalUrl.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    } else if (originalUrl.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+    }
+  }
+  next();
+});
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     index: false,
